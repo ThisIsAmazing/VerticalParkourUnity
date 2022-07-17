@@ -4,17 +4,55 @@ using UnityEngine;
 
 public class FallingPlatforms : MonoBehaviour
 {
-    Rigidbody rb;
+    private bool _isOscillating = false;
+    private bool _isGreen = false;
+    private Rigidbody rb;
+    private Renderer _renderer;
+    [SerializeField]
+    private Material _red;
+    [SerializeField]
+    private Material _green;
+
+    Vector3 startingPos;
+    [SerializeField] Vector3 movementVector = Vector3.right * 2;
+    float movementFactor;
+    [SerializeField] float period = 2f;
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.useGravity = false;
+        if (rb == null)
+        {
+            Debug.LogError("The Rigidbody is NULL.");
+        }
+        else
+        {
+            rb.useGravity = false;
+        }
+        _renderer = GetComponent<Renderer>();
+        if (_renderer == null)
+        {
+            Debug.LogError("The Renderer is NULL.");
+        }
+        startingPos = transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (_isOscillating == true)
+        {
+            if (period <= Mathf.Epsilon)
+            {
+                return;
+            }
+            float cycles = Time.time / period;
+            const float tau = Mathf.PI * 2;
+            float rawSineWave = Mathf.Sin(cycles * tau);
+            movementFactor = (rawSineWave + 1f) / 2f;
+            Vector3 offset = movementVector * movementFactor;
+            transform.position = startingPos + offset;
+        }
         if ((gameObject.tag == "Layer 0") && (Time.time > 2f))
         {
             rb.useGravity = true;
@@ -60,13 +98,23 @@ public class FallingPlatforms : MonoBehaviour
         {
             rb.useGravity = true;
         }
-
-
-
-
-
-
-        
-
+    }
+    public void isOscillating()
+    {
+        _isOscillating = true;
+    }
+    public void isGreen()
+    {
+        _isGreen = true;
+    }
+    private void OnCollisionEnter(UnityEngine.Collision collision)
+    {
+        if (_isGreen == true)
+        {
+            if (collision.gameObject.tag == "Player")
+            {
+                Debug.Log("YOU MADE IT");
+            }
+        }
     }
 }
